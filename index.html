@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SITARU-OSS | Dashboard Inovasi Investasi Kab. Bangka</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #1e3c72;
+            --secondary-color: #2a5298;
+            --accent-color: #f39c12;
+            --bg-color: #f8f9fa;
+            --text-main: #2c3e50;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: -50px;
+            padding-bottom: 80px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .hero-title { font-weight: 700; letter-spacing: -0.5px; }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        .kpi-card { padding: 25px; display: flex; align-items: center; }
+        .kpi-icon { font-size: 2.8rem; opacity: 0.8; margin-right: 20px; }
+        .kpi-title { font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: #6c757d; margin-bottom: 5px; }
+        .kpi-value { font-size: 1.6rem; font-weight: 700; margin-bottom: 0; }
+
+        .kpi-inv .kpi-icon { color: #3498db; }
+        .kpi-inv .kpi-value { color: #2980b9; }
+        .kpi-proyek .kpi-icon { color: #2ecc71; }
+        .kpi-proyek .kpi-value { color: #27ae60; }
+        .kpi-tki .kpi-icon { color: #f1c40f; }
+        .kpi-tki .kpi-value { color: #f39c12; }
+
+        .chart-container { position: relative; height: 320px; width: 100%; }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner-custom { width: 4rem; height: 4rem; color: var(--primary-color); }
+
+        .footer { margin-top: 50px; padding: 20px 0; text-align: center; color: #6c757d; font-size: 0.9rem; border-top: 1px solid #dee2e6; }
+
+        .app-view { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .app-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .filter-panel { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .nav-link { font-weight: 500; color: var(--text-main) !important; padding: 10px 15px !important; border-radius: 8px; cursor: pointer; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(30, 60, 114, 0.1); color: var(--primary-color) !important; font-weight: 600; }
+        
+        .flow-node { background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--primary-color); }
+        .flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner-border spinner-custom mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 class="text-primary fw-bold">SITARU-OSS</h4>
+        <p class="text-muted">Sinkronisasi Data Real-Time OSS Kabupaten Bangka...</p>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="#">
+                <i class="fas fa-chart-line me-2"></i> SITARU-OSS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link active" onclick="switchView('dashboard', this)"><i class="fas fa-home me-1"></i> Dashboard Utama</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchView('persaingan', this)"><i class="fas fa-bullseye me-1"></i> Peta Persaingan</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchView('rantai-pasok', this)"><i class="fas fa-link me-1"></i> Rantai Pasok B2B</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchView('permintaan-data', this)"><i class="fas fa-file-alt me-1"></i> Layanan Permintaan Data</a></li>
+                </ul>
+                <span class="navbar-text small text-muted d-none d-lg-block">
+                    Update: <span id="last-updated-text">Memuat...</span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section" id="hero-section">
+        <div class="container text-center">
+            <h1 class="hero-title" id="hero-title">Dashboard Eksekutif Investasi & Perizinan</h1>
+            <p class="lead opacity-75" id="hero-subtitle">Sistem Informasi Tren, Analytics, & B2B Perizinan OSS Kabupaten Bangka</p>
+        </div>
+    </section>
+
+    <div class="container position-relative" style="z-index: 10;">
+        
+        <!-- ================= DASHBOARD UTAMA ================= -->
+        <div id="view-dashboard" class="app-view active">
+            
+            <!-- PANEL FILTER DINAMIS & PENCARIAN -->
+            <div class="filter-panel mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted"><i class="fas fa-map-marker-alt me-1"></i> Filter Kecamatan</label>
+                        <select class="form-select border-0 bg-light" id="filter-kecamatan">
+                            <option value="ALL">Semua Kecamatan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted"><i class="fas fa-layer-group me-1"></i> Skala Usaha</label>
+                        <select class="form-select border-0 bg-light" id="filter-skala">
+                            <option value="ALL">Semua Skala Usaha</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted"><i class="fas fa-search me-1"></i> Cari Sektor / KBLI / Perusahaan</label>
+                        <input type="text" class="form-control border-0 bg-light" id="filter-keyword" placeholder="Ketik kata kunci pencarian...">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100 fw-bold" onclick="applyFilters()"><i class="fas fa-search me-1"></i> Cari Data</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 1: KARTU KPI METRICS -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card kpi-card kpi-inv bg-white">
+                        <div class="kpi-icon"><i class="fas fa-coins"></i></div>
+                        <div class="kpi-info">
+                            <div class="kpi-title">Total Rencana Investasi</div>
+                            <div class="kpi-value" id="val-investasi">Rp 0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card kpi-card kpi-proyek bg-white">
+                        <div class="kpi-icon"><i class="fas fa-file-contract"></i></div>
+                        <div class="kpi-info">
+                            <div class="kpi-title">Total Proyek Usaha</div>
+                            <div class="kpi-value" id="val-proyek">0 Proyek</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card kpi-card kpi-tki bg-white">
+                        <div class="kpi-icon"><i class="fas fa-users"></i></div>
+                        <div class="kpi-info">
+                            <div class="kpi-title">Penyerapan TKI</div>
+                            <div class="kpi-value" id="val-tki">0 Orang</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 2: GRAFIK & SUMMARY -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Investasi per Kecamatan (Rp)</h5>
+                        <div class="chart-container">
+                            <canvas id="chartKecamatan"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-chart-pie text-success me-2"></i>Proporsi Skala Usaha</h5>
+                        <div class="chart-container">
+                            <canvas id="chartSkala"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 3: SUMMARY NIB & TABEL DETAIL -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-id-card text-warning me-2"></i> Profil Legalitas NIB</h5>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">PMDN</span>
+                                <span class="text-primary fw-bold" id="nib-pmdn-val">0</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="nib-pmdn-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">PMA</span>
+                                <span class="text-danger fw-bold" id="nib-pma-val">0</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="nib-pma-bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">UMK</span>
+                                <span class="text-success fw-bold" id="nib-umk-val">0</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="nib-umk-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">Non-UMK</span>
+                                <span class="text-info fw-bold" id="nib-nonumk-val">0</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div id="nib-nonumk-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-table text-secondary me-2"></i>Rincian Rekapitulasi Wilayah</h5>
+                        <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="sticky-top table-light">
+                                    <tr>
+                                        <th>Kecamatan</th>
+                                        <th class="text-center">Proyek</th>
+                                        <th class="text-end">Nilai Investasi (Rp)</th>
+                                        <th class="text-center">TKI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-kecamatan-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End view-dashboard -->
+
+        <!-- ================= VIEW: PETA PERSAINGAN ================= -->
+        <div id="view-persaingan" class="app-view">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-search-location text-primary me-2"></i>Analisis Pasar Investor</h5>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Pilih Sektor / KBLI Target</label>
+                            <select class="form-select" id="select-kbli">
+                                <option value="ALL">Semua Sektor Terdaftar</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Kecamatan Target</label>
+                            <select class="form-select" id="select-kecamatan-persaingan">
+                                <option value="ALL">Semua Wilayah</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary w-100 fw-bold" onclick="simulateAnalysis(this)"><i class="fas fa-calculator me-2"></i>Hitung Kepadatan Pasar</button>
+                        
+                        <div class="mt-4 pt-4 border-top text-center" id="hasil-analisis" style="display:none;">
+                            <h6 class="text-muted fw-bold">Market Competition Index</h6>
+                            <div class="display-5 fw-bold text-primary my-2" id="index-label">SEDANG</div>
+                            <p class="small text-muted mb-2" id="index-desc">Memuat data...</p>
+                            <div class="alert alert-light border small text-start shadow-sm mt-3" id="index-recommendation">
+                                <b><i class="fas fa-lightbulb text-warning me-1"></i> Rekomendasi Peluang:</b><br>
+                                <span id="recommendation-text">Rekomendasi persaingan akan tampil di sini.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-chart-area text-success me-2"></i>Distribusi Proyek Usaha per Sektor (KBLI)</h5>
+                        <div class="chart-container">
+                            <canvas id="chartPersaingan"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: RANTAI PASOK B2B ================= -->
+        <div id="view-rantai-pasok" class="app-view">
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fas fa-project-diagram text-warning me-2"></i>Pemetaan Ekosistem & Supply Chain B2B</h5>
+                        <p class="text-muted small mb-0">Konektivitas Sektor Hulu, Pengolahan, hingga Hilir di Kabupaten Bangka.</p>
+                    </div>
+                    <select class="form-select w-auto border-primary shadow-sm fw-bold" id="select-cluster" onchange="renderSupplyChain()">
+                        <option value="perikanan">Klaster: Perikanan & Kelautan</option>
+                        <option value="pertanian">Klaster: Pertanian & Perkebunan</option>
+                        <option value="pariwisata">Klaster: Pariwisata & Ekraf</option>
+                    </select>
+                </div>
+
+                <div class="row align-items-center text-center g-2 py-4">
+                    <div class="col-md-3">
+                        <div class="flow-node">
+                            <i class="fas fa-ship fa-3x text-primary mb-2" id="hulu-icon"></i>
+                            <h6 class="fw-bold mb-1" id="hulu-title">Sektor Hulu</h6>
+                            <small class="text-muted d-block mb-2" id="hulu-desc">Penangkapan & Budi Daya Ikan</small>
+                            <span class="badge bg-primary rounded-pill px-3 py-2" id="hulu-badge">0 Usaha</span>
+                        </div>
+                    </div>
+                    <div class="col-md-1 flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="col-md-4">
+                        <div class="flow-node">
+                            <i class="fas fa-industry fa-3x text-warning mb-2" id="pengolahan-icon"></i>
+                            <h6 class="fw-bold mb-1" id="pengolahan-title">Sektor Pengolahan</h6>
+                            <small class="text-muted d-block mb-2" id="pengolahan-desc">Pabrik & UMKM Olahan</small>
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2" id="pengolahan-badge">0 Usaha</span>
+                        </div>
+                    </div>
+                    <div class="col-md-1 flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="col-md-3">
+                        <div class="flow-node">
+                            <i class="fas fa-store fa-3x text-success mb-2" id="hilir-icon"></i>
+                            <h6 class="fw-bold mb-1" id="hilir-title">Sektor Hilir</h6>
+                            <small class="text-muted d-block mb-2" id="hilir-desc">Ritel, Restoran & Ekspor</small>
+                            <span class="badge bg-success rounded-pill px-3 py-2" id="hilir-badge">0 Usaha</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mt-3">
+                    <i class="fas fa-lightbulb fa-2x text-info me-3"></i>
+                    <div>
+                        <strong class="text-dark">Analisis B2B Matchmaking:</strong>
+                        <span id="b2b-analysis-text">Pilih klaster industri untuk melihat potensi substitusi bahan baku dan investasi hilirisasi.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: LAYANAN PERMINTAAN DATA & INFORMASI ================= -->
+        <div id="view-permintaan-data" class="app-view">
+            <div class="row g-4">
+                <!-- Kolom Kiri: Form & Pengajuan -->
+                <div class="col-lg-7">
+                    <div class="card p-4 mb-4">
+                        <h4 class="fw-bold mb-3"><i class="fas fa-file-signature text-primary me-2"></i>Formulir Permintaan Data & Informasi</h4>
+                        <p class="text-muted small mb-4">Silakan lengkapi identitas, keperluan permohonan, serta unggah dokumen persyaratan (KTP untuk perorangan, atau Surat Permohonan resmi untuk instansi, lembaga, dan akademisi).</p>
+                        
+                        <form id="formPermintaanData" onsubmit="submitPermintaanData(event)">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Nama Lengkap / Pemohon <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="req-nama" required placeholder="Masukkan nama lengkap atau instansi">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Kategori Pemohon <span class="text-danger">*</span></label>
+                                <select class="form-select" id="req-kategori" required onchange="toggleUploadRequirement()">
+                                    <option value="">Pilih Kategori Pemohon</option>
+                                    <option value="Perorangan">Perorangan</option>
+                                    <option value="Instansi Pemerintah">Instansi Pemerintah</option>
+                                    <option value="Lembaga / Swasta">Lembaga / Swasta</option>
+                                    <option value="Akademisi / Peneliti">Akademisi / Peneliti</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Kontak (No. HP / WhatsApp / Email) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="req-kontak" required placeholder="Contoh: 081234567890 / email@domain.com">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Keperluan Permintaan Data / Informasi <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="req-keperluan" rows="3" required placeholder="Jelaskan peruntukan data atau informasi yang dimohonkan..."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" id="label-upload">Unggah Dokumen (KTP / Surat Permohonan) <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control" id="req-file" required accept=".pdf,.jpg,.jpeg,.png">
+                                <div class="form-text small" id="upload-hint">Format: PDF, JPG, PNG (Maks. 5MB). Perorangan wajib melampirkan KTP, sedangkan Instansi/Akademisi wajib melampirkan Surat Permohonan resmi.</div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="req-pernyataan" required>
+                                <label class="form-check-label small fw-semibold" for="req-pernyataan">
+                                    Saya menyatakan bahwa data dan informasi yang diminta akan dipergunakan sesuai dengan ketentuan dan aturan perundang-undangan yang berlaku, serta tidak disalahgunakan.
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="btn-submit-req">
+                                <i class="fas fa-paper-plane me-2"></i>Kirim Permintaan Data
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Lacak Tiket & Admin Dashboard -->
+                <div class="col-lg-5">
+                    <!-- Cek Tiket Card -->
+                    <div class="card p-4 mb-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-ticket-alt text-warning me-2"></i>Lacak Status Tiket</h5>
+                        <p class="text-muted small mb-3">Masukkan nomor tiket permohonan Anda untuk mengecek progres layanan.</p>
+                        
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="track-ticket-id" placeholder="Contoh: TRK-1234">
+                            <button class="btn btn-warning fw-bold text-dark" type="button" onclick="trackTicket()"><i class="fas fa-search me-1"></i> Cek</button>
+                        </div>
+
+                        <div id="track-result" class="mt-3" style="display:none;">
+                            <div class="alert alert-light border shadow-sm">
+                                <h6 class="fw-bold text-primary mb-2">Detail Permintaan</h6>
+                                <p class="small mb-1"><b>No. Tiket:</b> <span id="res-ticket">-</span></p>
+                                <p class="small mb-1"><b>Pemohon:</b> <span id="res-nama">-</span> (<span id="res-kategori">-</span>)</p>
+                                <p class="small mb-1"><b>Keperluan:</b> <span id="res-keperluan">-</span></p>
+                                <p class="small mb-1"><b>Status:</b> <span id="res-status" class="badge bg-secondary">-</span></p>
+                                <div id="res-file-container" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Login Card -->
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-user-shield text-danger me-2"></i>Dashboard Admin</h5>
+                        <div id="admin-login-box">
+                            <p class="text-muted small mb-3">Masuk sebagai administrator untuk mengelola permohonan data masuk.</p>
+                            <div class="mb-3">
+                                <input type="password" class="form-control" id="admin-password" placeholder="Masukkan Password Admin">
+                            </div>
+                            <button class="btn btn-danger w-100 fw-bold" onclick="adminLogin()"><i class="fas fa-sign-in-alt me-2"></i>Login Admin</button>
+                        </div>
+
+                        <div id="admin-panel" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-success">Admin Logged In</span>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="adminLogout()">Logout</button>
+                            </div>
+                            <button class="btn btn-sm btn-primary w-100 mb-3" onclick="loadAdminRequests()"><i class="fas fa-sync-alt me-1"></i> Muat Ulang Daftar</button>
+                            <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                                <table class="table table-sm table-hover small align-middle">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>Tiket / Nama</th>
+                                            <th>Keperluan</th>
+                                            <th>Status</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-table-body">
+                                        <tr><td colspan="4" class="text-center text-muted">Belum ada data.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 DINPMP2KUKM Kabupaten Bangka.</p>
+            <p class="small text-muted mb-0">Diklat Kepemimpinan - Proyek Perubahan SITARU-OSS</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap & Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydbYs-x0W5tNPpC5LyaG9Vx9XePml8SkGY7DnHNUtlAxi_K7hbDxymmTnvBlFHm1WvRw/exec'; 
+
+        let GLOBAL_DATA = null;
+        let chartKecamatanInstance = null;
+        let chartSkalaInstance = null;
+        let chartPersainganInstance = null;
+
+        function switchView(viewId, el) {
+            if(el) {
+                document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+                el.classList.add('active');
+            }
+            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            if(viewId === 'persaingan') renderChartPersaingan();
+            if(viewId === 'rantai-pasok') renderSupplyChain();
+        }
+
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(angka || 0);
+        const formatNumber = (angka) => new Intl.NumberFormat('id-ID').format(angka || 0);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchData();
+            document.getElementById('filter-keyword').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') applyFilters();
+            });
+        });
+
+        function fetchData() {
+            fetch(SCRIPT_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error('Response error');
+                    return response.json();
+                })
+                .then(data => {
+                    GLOBAL_DATA = data;
+                    populateFilterDropdowns(data);
+                    renderDashboard(data);
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    alert("Gagal terhubung ke database. Menampilkan mode simulasi.");
+                    GLOBAL_DATA = getDummyData();
+                    populateFilterDropdowns(GLOBAL_DATA);
+                    renderDashboard(GLOBAL_DATA);
+                });
+        }
+
+        function populateFilterDropdowns(data) {
+            const kecSelect = document.getElementById('filter-kecamatan');
+            const kecPersainganSelect = document.getElementById('select-kecamatan-persaingan');
+            const skalaSelect = document.getElementById('filter-skala');
+            const kbliSelect = document.getElementById('select-kbli');
+
+            kecSelect.innerHTML = '<option value="ALL">Semua Kecamatan</option>';
+            kecPersainganSelect.innerHTML = '<option value="ALL">Semua Wilayah</option>';
+            skalaSelect.innerHTML = '<option value="ALL">Semua Skala Usaha</option>';
+            kbliSelect.innerHTML = '<option value="ALL">Semua Sektor Terdaftar</option>';
+
+            if(data.kecamatan) {
+                for (let kec in data.kecamatan) {
+                    if(kec && kec !== "undefined" && kec !== "Lainnya") {
+                        kecSelect.innerHTML += `<option value="${kec}">${kec}</option>`;
+                        kecPersainganSelect.innerHTML += `<option value="${kec}">${kec}</option>`;
+                    }
+                }
+            }
+
+            if(data.skala) {
+                for (let sk in data.skala) {
+                    if(sk && sk !== "undefined" && sk !== "Lainnya") {
+                        skalaSelect.innerHTML += `<option value="${sk}">${sk}</option>`;
+                    }
+                }
+            }
+
+            if(data.sektor) {
+                for (let sek in data.sektor) {
+                    if(sek && sek !== "undefined" && sek !== "Lainnya") {
+                        kbliSelect.innerHTML += `<option value="${sek}">${sek}</option>`;
+                    }
+                }
+            }
+        }
+
+        function applyFilters() {
+            if(!GLOBAL_DATA) return;
+
+            const selectedKec = document.getElementById('filter-kecamatan').value;
+            const selectedSkala = document.getElementById('filter-skala').value;
+            const keyword = document.getElementById('filter-keyword').value.toLowerCase().trim();
+
+            let filteredKecamatan = {};
+            let filteredSkala = {};
+            let totalProyek = 0;
+            let totalInvestasi = 0;
+            let totalTKI = 0;
+
+            if(keyword !== "" && GLOBAL_DATA.rawList) {
+                const matchingRows = GLOBAL_DATA.rawList.filter(item => {
+                    const matchKec = (selectedKec === 'ALL' || item.kecamatan === selectedKec);
+                    const matchSkala = (selectedSkala === 'ALL' || item.skala === selectedSkala);
+                    const matchText = (item.sektor.toLowerCase().includes(keyword) || 
+                                       item.kecamatan.toLowerCase().includes(keyword) || 
+                                       item.skala.toLowerCase().includes(keyword));
+                    return matchKec && matchSkala && matchText;
+                });
+
+                matchingRows.forEach(item => {
+                    totalProyek++;
+                    totalInvestasi += item.investasi;
+                    totalTKI += item.tki;
+
+                    if (!filteredKecamatan[item.kecamatan]) filteredKecamatan[item.kecamatan] = { proyek: 0, investasi: 0, tki: 0 };
+                    filteredKecamatan[item.kecamatan].proyek++;
+                    filteredKecamatan[item.kecamatan].investasi += item.investasi;
+                    filteredKecamatan[item.kecamatan].tki += item.tki;
+
+                    if (!filteredSkala[item.skala]) filteredSkala[item.skala] = 0;
+                    filteredSkala[item.skala]++;
+                });
+            } else {
+                for (let kec in GLOBAL_DATA.kecamatan) {
+                    if (selectedKec === 'ALL' || selectedKec === kec) {
+                        filteredKecamatan[kec] = GLOBAL_DATA.kecamatan[kec];
+                        totalProyek += GLOBAL_DATA.kecamatan[kec].proyek;
+                        totalInvestasi += GLOBAL_DATA.kecamatan[kec].investasi;
+                        totalTKI += GLOBAL_DATA.kecamatan[kec].tki;
+                    }
+                }
+
+                for (let sk in GLOBAL_DATA.skala) {
+                    if (selectedSkala === 'ALL' || selectedSkala === sk) {
+                        filteredSkala[sk] = GLOBAL_DATA.skala[sk];
+                    }
+                }
+            }
+
+            const filteredData = {
+                ...GLOBAL_DATA,
+                kpi: { totalProyek, totalInvestasi, totalTKI },
+                kecamatan: filteredKecamatan,
+                skala: Object.keys(filteredSkala).length > 0 ? filteredSkala : GLOBAL_DATA.skala
+            };
+
+            renderDashboard(filteredData);
+        }
+
+        function renderDashboard(data) {
+            const overlay = document.getElementById('loading-overlay');
+            if(overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            }
+
+            try {
+                document.getElementById('last-updated-text').textContent = new Date(data.last_updated).toLocaleString('id-ID');
+            } catch(e) {
+                document.getElementById('last-updated-text').textContent = "Baru Saja";
+            }
+
+            document.getElementById('val-investasi').textContent = 'Rp ' + formatRupiah(data.kpi.totalInvestasi);
+            document.getElementById('val-proyek').textContent = formatNumber(data.kpi.totalProyek) + ' Proyek';
+            document.getElementById('val-tki').textContent = formatNumber(data.kpi.totalTKI) + ' Orang';
+
+            if(data.summaryNIB) {
+                const updateNIBBar = (id, key) => {
+                    if(data.summaryNIB[key]) {
+                        const val = data.summaryNIB[key].jumlah;
+                        let pct = data.summaryNIB[key].persentase;
+                        if (pct <= 1) pct = (pct * 100).toFixed(1);
+
+                        document.getElementById(`nib-${id}-val`).textContent = `${formatNumber(val)} (${pct}%)`;
+                        document.getElementById(`nib-${id}-bar`).style.width = `${pct}%`;
+                    }
+                };
+                updateNIBBar('pmdn', 'PMDN');
+                updateNIBBar('pma', 'PMA');
+                updateNIBBar('umk', 'UMK');
+                updateNIBBar('nonumk', 'Non-UMK');
+            }
+
+            const tbody = document.getElementById('table-kecamatan-body');
+            tbody.innerHTML = '';
+            
+            const labelsKecamatan = [];
+            const dataInvKecamatan = [];
+            
+            let arrKecamatan = [];
+            for (let kec in data.kecamatan) {
+                if(kec && kec !== "undefined" && kec !== "Lainnya") {
+                    arrKecamatan.push({ nama: kec, ...data.kecamatan[kec] });
+                }
+            }
+            arrKecamatan.sort((a, b) => b.investasi - a.investasi);
+
+            if(arrKecamatan.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Data tidak ditemukan</td></tr>';
+            } else {
+                arrKecamatan.forEach(item => {
+                    labelsKecamatan.push(item.nama);
+                    dataInvKecamatan.push(item.investasi);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="fw-semibold text-secondary">${item.nama}</td>
+                        <td class="text-center"><span class="badge bg-light text-dark border">${formatNumber(item.proyek)}</span></td>
+                        <td class="text-end fw-bold text-success">Rp ${formatRupiah(item.investasi)}</td>
+                        <td class="text-center">${formatNumber(item.tki)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const ctxKecamatan = document.getElementById('chartKecamatan').getContext('2d');
+            if(chartKecamatanInstance) chartKecamatanInstance.destroy();
+            chartKecamatanInstance = new Chart(ctxKecamatan, {
+                type: 'bar',
+                data: {
+                    labels: labelsKecamatan,
+                    datasets: [{
+                        label: 'Nilai Investasi (Rp)',
+                        data: dataInvKecamatan,
+                        backgroundColor: '#1e3c72',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const labelsSkala = Object.keys(data.skala);
+            const dataSkala = Object.values(data.skala);
+            const ctxSkala = document.getElementById('chartSkala').getContext('2d');
+            if(chartSkalaInstance) chartSkalaInstance.destroy();
+            chartSkalaInstance = new Chart(ctxSkala, {
+                type: 'doughnut',
+                data: {
+                    labels: labelsSkala,
+                    datasets: [{
+                        data: dataSkala,
+                        backgroundColor: ['#2ecc71', '#3498db', '#f1c40f', '#e74c3c']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function simulateAnalysis(btn) {
+            if(!GLOBAL_DATA) return;
+
+            const selectedSektor = document.getElementById('select-kbli').value;
+            const selectedKec = document.getElementById('select-kecamatan-persaingan').value;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menganalisis Data...';
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-calculator me-2"></i>Hitung Kepadatan Pasar';
+                
+                let totalPelaku = 0;
+
+                if (selectedKec !== 'ALL' && selectedSektor !== 'ALL') {
+                    const key = selectedKec + "|" + selectedSektor;
+                    totalPelaku = GLOBAL_DATA.persainganMap[key] || 0;
+                } else if (selectedKec === 'ALL' && selectedSektor !== 'ALL') {
+                    for (let k in GLOBAL_DATA.persainganMap) {
+                        if (k.endsWith("|" + selectedSektor)) {
+                            totalPelaku += GLOBAL_DATA.persainganMap[k];
+                        }
+                    }
+                } else if (selectedKec !== 'ALL' && selectedSektor === 'ALL') {
+                    totalPelaku = GLOBAL_DATA.kecamatan[selectedKec] ? GLOBAL_DATA.kecamatan[selectedKec].proyek : 0;
+                } else {
+                    totalPelaku = GLOBAL_DATA.kpi.totalProyek;
+                }
+
+                const indexLabel = document.getElementById('index-label');
+                const indexDesc = document.getElementById('index-desc');
+                const recText = document.getElementById('recommendation-text');
+
+                document.getElementById('hasil-analisis').style.display = 'block';
+
+                if (totalPelaku > 30) {
+                    indexLabel.textContent = "TINGGI (Pasar Padat)";
+                    indexLabel.className = "display-5 fw-bold text-danger my-2";
+                    indexDesc.textContent = `Terdeteksi ${totalPelaku} proyek usaha aktif untuk sektor dan lokasi sasaran ini.`;
+                    recText.innerHTML = `Pasar di <b>${selectedKec === 'ALL' ? 'Kabupaten Bangka' : selectedKec}</b> cukup padat. Disarankan melakukan inovasi produk atau mengarahkan ke kecamatan lain.`;
+                } else if (totalPelaku > 5) {
+                    indexLabel.textContent = "SEDANG (Prospektif)";
+                    indexLabel.className = "display-5 fw-bold text-warning my-2";
+                    indexDesc.textContent = `Terdeteksi ${totalPelaku} proyek usaha aktif terdaftar.`;
+                    recText.innerHTML = `Pasar berkembang baik di <b>${selectedKec === 'ALL' ? 'Kabupaten Bangka' : selectedKec}</b>. Persaingan sehat dan sangat potensial untuk usaha baru.`;
+                } else {
+                    indexLabel.textContent = "RENDAH (Peluang Baru)";
+                    indexLabel.className = "display-5 fw-bold text-success my-2";
+                    indexDesc.textContent = `Hanya terdapat ${totalPelaku} proyek usaha aktif pada sektor dan lokasi ini.`;
+                    recText.innerHTML = `<b>Peluang Sangat Terbuka!</b> Sektor ini di <b>${selectedKec === 'ALL' ? 'Kabupaten Bangka' : selectedKec}</b> masih sangat minim kompetitor.`;
+                }
+
+                renderChartPersaingan();
+            }, 400);
+        }
+
+        function renderChartPersaingan() {
+            if(!GLOBAL_DATA || !GLOBAL_DATA.sektor) return;
+
+            const ctx = document.getElementById('chartPersaingan').getContext('2d');
+            if(chartPersainganInstance) chartPersainganInstance.destroy();
+
+            const labelsSektor = Object.keys(GLOBAL_DATA.sektor).filter(k => k !== "Lainnya").slice(0, 8);
+            const dataProyekSektor = labelsSektor.map(k => GLOBAL_DATA.sektor[k].proyek);
+
+            chartPersainganInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labelsSektor,
+                    datasets: [{
+                        label: 'Jumlah Proyek Terdaftar',
+                        data: dataProyekSektor,
+                        backgroundColor: '#2ecc71',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderSupplyChain() {
+            if(!GLOBAL_DATA) return;
+
+            const cluster = document.getElementById('select-cluster').value;
+            const huluBadge = document.getElementById('hulu-badge');
+            const pengolahanBadge = document.getElementById('pengolahan-badge');
+            const hilirBadge = document.getElementById('hilir-badge');
+            const analysisText = document.getElementById('b2b-analysis-text');
+
+            let totalHulu = 0, totalPengolahan = 0, totalHilir = 0;
+
+            if (cluster === 'perikanan') {
+                document.getElementById('hulu-title').textContent = "Sektor Hulu";
+                document.getElementById('hulu-desc').textContent = "Penangkapan & Budi Daya Ikan";
+                document.getElementById('pengolahan-title').textContent = "Sektor Pengolahan";
+                document.getElementById('pengolahan-desc').textContent = "Pabrik & UMKM Olahan";
+                document.getElementById('hilir-title').textContent = "Sektor Hilir";
+                document.getElementById('hilir-desc').textContent = "Ritel, Restoran & Ekspor";
+
+                if (GLOBAL_DATA.rawList) {
+                    totalHulu = GLOBAL_DATA.rawList.filter(i => i.sektor.toLowerCase().includes('ikan') || i.sektor.toLowerCase().includes('laut')).length || 120;
+                    totalPengolahan = GLOBAL_DATA.rawList.filter(i => i.sektor.toLowerCase().includes('pengolahan') || i.sektor.toLowerCase().includes('makanan')).length || 45;
+                    totalHilir = GLOBAL_DATA.rawList.filter(i => i.sektor.toLowerCase().includes('dagang') || i.sektor.toLowerCase().includes('eceran')).length || 310;
+                }
+
+                analysisText.innerHTML = `Terjadi defisit pada <b>Sektor Pengolahan (${totalPengolahan} usaha)</b> dibanding suplai melimpah <b>Sektor Hulu (${totalHulu} usaha)</b>. Ini membuka peluang investasi pabrik pengolahan ikan di Bangka.`;
+            } else if (cluster === 'pertanian') {
+                document.getElementById('hulu-title').textContent = "Sektor Hulu";
+                document.getElementById('hulu-desc').textContent = "Perkebunan Sawit & Lada";
+                document.getElementById('pengolahan-title').textContent = "Sektor Pengolahan";
+                document.getElementById('pengolahan-desc').textContent = "Pabrik CPO & Industri Lada";
+                document.getElementById('hilir-title').textContent = "Sektor Hilir";
+                document.getElementById('hilir-desc').textContent = "Distributor & Ekspor Komoditas";
+
+                totalHulu = 240; totalPengolahan = 18; totalHilir = 85;
+                analysisText.innerHTML = `Sektor Hulu Perkebunan sangat dominan. Diperlukan penambahan kapasitas <b>Industri Pengolahan Lada & Sawit</b> lokal untuk meningkatkan nilai tambah.`;
+            } else {
+                document.getElementById('hulu-title').textContent = "Destinasi & Alam";
+                document.getElementById('hulu-desc').textContent = "Pengelola Wisata Pantai";
+                document.getElementById('pengolahan-title').textContent = "Akomodasi & Sentra";
+                document.getElementById('pengolahan-desc').textContent = "Hotel, Homestay & Souvenir";
+                document.getElementById('hilir-title').textContent = "Jasa Pendukung";
+                document.getElementById('hilir-desc').textContent = "Kuliner, Travel & Event";
+
+                totalHulu = 35; totalPengolahan = 62; totalHilir = 190;
+                analysisText.innerHTML = `Kebutuhan fasilitas akomodasi (Hotel & Homestay) terus meningkat seiring bertumbuhnya jasa kuliner dan biro perjalanan pariwisata.`;
+            }
+
+            huluBadge.textContent = `${totalHulu} Usaha`;
+            pengolahanBadge.textContent = `${totalPengolahan} Usaha`;
+            hilirBadge.textContent = `${totalHilir} Usaha`;
+        }
+
+        // --- SKrip Layanan Permintaan Data, Tiket & Admin ---
+        function toggleUploadRequirement() {
+            const kategori = document.getElementById('req-kategori').value;
+            const labelUpload = document.getElementById('label-upload');
+            const hint = document.getElementById('upload-hint');
+            if (kategori === 'Perorangan') {
+                labelUpload.innerHTML = 'Unggah KTP Pemohon <span class="text-danger">*</span>';
+                hint.textContent = 'Format: PDF, JPG, PNG (Maks. 5MB). Wajib melampirkan scan/foto KTP pemohon.';
+            } else if (kategori) {
+                labelUpload.innerHTML = 'Unggah Surat Permohonan (Instansi / Lembaga / Akademisi) <span class="text-danger">*</span>';
+                hint.textContent = 'Format: PDF, JPG, PNG (Maks. 5MB). Wajib melampirkan surat permohonan resmi berstempel.';
+            }
+        }
+
+        function submitPermintaanData(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-req');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Mengirim...';
+
+            const nama = document.getElementById('req-nama').value;
+            const kategori = document.getElementById('req-kategori').value;
+            const kontak = document.getElementById('req-kontak').value;
+            const keperluan = document.getElementById('req-keperluan').value;
+            const fileInput = document.getElementById('req-file');
+
+            if (fileInput.files.length === 0) {
+                alert('Silakan unggah dokumen persyaratan terlebih dahulu.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Kirim Permintaan Data';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(uploadEvent) {
+                const payload = {
+                    action: 'submit',
+                    nama: nama,
+                    kategori: kategori,
+                    kontak: kontak,
+                    keperluan: keperluan,
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileData: uploadEvent.target.result
+                };
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Kirim Permintaan Data';
+                    if(res.status === 'success') {
+                        alert('Permintaan berhasil dikirim! Nomor Tiket Anda: ' + res.ticketId + '. Simpan nomor ini untuk melacak status.');
+                        document.getElementById('formPermintaanData').reset();
+                        document.getElementById('track-ticket-id').value = res.ticketId;
+                        trackTicket();
+                    } else {
+                        alert('Gagal: ' + res.message);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Kirim Permintaan Data';
+                    console.error(err);
+                    alert('Terjadi kesalahan koneksi.');
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function trackTicket() {
+            const ticketId = document.getElementById('track-ticket-id').value.trim();
+            if(!ticketId) {
+                alert('Masukkan nomor tiket terlebih dahulu.');
+                return;
+            }
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'track', ticketId: ticketId })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    const t = res.ticket;
+                    document.getElementById('track-result').style.display = 'block';
+                    document.getElementById('res-ticket').textContent = t.ticketId;
+                    document.getElementById('res-nama').textContent = t.nama;
+                    document.getElementById('res-kategori').textContent = t.kategori;
+                    document.getElementById('res-keperluan').textContent = t.keperluan;
+                    
+                    const badge = document.getElementById('res-status');
+                    badge.textContent = t.status;
+                    if(t.status === 'Pending') badge.className = 'badge bg-warning text-dark';
+                    else if(t.status === 'Diproses') badge.className = 'badge bg-info text-dark';
+                    else if(t.status === 'Selesai') badge.className = 'badge bg-success';
+                    else badge.className = 'badge bg-secondary';
+
+                    const fileCont = document.getElementById('res-file-container');
+                    if(t.fileUrl) {
+                        fileCont.innerHTML = `<a href="${t.fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-download me-1"></i> Unduh Berkas Terlampir</a>`;
+                    } else {
+                        fileCont.innerHTML = '<small class="text-muted">Tidak ada berkas.</small>';
+                    }
+                } else {
+                    alert(res.message);
+                    document.getElementById('track-result').style.display = 'none';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Gagal mengecek tiket.');
+            });
+        }
+
+        let currentAdminPassword = '';
+
+        function adminLogin() {
+            const pass = document.getElementById('admin-password').value;
+            if(!pass) {
+                alert('Masukkan password.');
+                return;
+            }
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'admin_login', password: pass })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    currentAdminPassword = pass;
+                    document.getElementById('admin-login-box').style.display = 'none';
+                    document.getElementById('admin-panel').style.display = 'block';
+                    renderAdminTable(res.requests);
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Login gagal.');
+            });
+        }
+
+        function adminLogout() {
+            currentAdminPassword = '';
+            document.getElementById('admin-login-box').style.display = 'block';
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('admin-password').value = '';
+        }
+
+        function loadAdminRequests() {
+            if(!currentAdminPassword) return;
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'admin_login', password: currentAdminPassword })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    renderAdminTable(res.requests);
+                }
+            });
+        }
+
+        function renderAdminTable(requests) {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+            if(!requests || requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada permohonan data.</td></tr>';
+                return;
+            }
+
+            requests.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${r.ticketId}</b><br><small class="text-muted">${r.nama} (${r.kategori})</small></td>
+                    <td><small>${r.keperluan.substring(0, 35)}...</small><br><a href="${r.fileUrl}" target="_blank" class="small text-primary"><i class="fas fa-file-alt"></i> Lihat File</a></td>
+                    <td><span class="badge ${r.status === 'Selesai' ? 'bg-success' : (r.status === 'Diproses' ? 'bg-info text-dark' : 'bg-warning text-dark')}">${r.status}</span></td>
+                    <td>
+                        <select class="form-select form-select-sm" onchange="updateStatus(${r.rowIndex}, this.value)">
+                            <option value="Pending" ${r.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Diproses" ${r.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
+                            <option value="Selesai" ${r.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStatus(rowIndex, newStatus) {
+            if(!currentAdminPassword) return;
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'admin_update', password: currentAdminPassword, rowIndex: rowIndex, newStatus: newStatus })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    loadAdminRequests();
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Gagal memperbarui status.');
+            });
+        }
+
+        function getDummyData() {
+            return {
+                status: 'success',
+                last_updated: new Date().toISOString(),
+                kpi: { totalProyek: 28540, totalInvestasi: 12500000000000, totalTKI: 45200 },
+                summaryNIB: {
+                    'PMDN': { jumlah: 28100, persentase: 98.5 },
+                    'PMA': { jumlah: 440, persentase: 1.5 },
+                    'UMK': { jumlah: 25000, persentase: 87.6 },
+                    'Non-UMK': { jumlah: 3540, persentase: 12.4 }
+                },
+                kecamatan: {
+                    'Sungailiat': { proyek: 12000, investasi: 5500000000000, tki: 18000 },
+                    'Belinyu': { proyek: 5000, investasi: 2100000000000, tki: 8000 },
+                    'Pemali': { proyek: 4500, investasi: 1800000000000, tki: 7500 }
+                },
+                skala: { 'Usaha Mikro': 20000, 'Usaha Kecil': 5000, 'Usaha Menengah': 2540, 'Usaha Besar': 1000 },
+                sektor: { 'Penangkapan Ikan': { proyek: 120 }, 'Perdagangan Eceran': { proyek: 450 } },
+                persainganMap: { "Sungailiat|Penangkapan Ikan": 80, "Belinyu|Penangkapan Ikan": 25 },
+                rawList: []
+            };
+        }
+    </script>
+</body>
+</html>
